@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CS2 Flashbang Simulator</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #111;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+    }
+
+    #flashOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: white;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 5;
+      transition: opacity 0.2s ease-out;
+    }
+
+    #flashImage {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 6;
+      transition: opacity 0.15s ease-out;
+    }
+
+    #startButton, #stopButton {
+      position: absolute;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      background-color: #0078ff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 10;
+      user-select: none;
+    }
+
+    #startButton:hover, #stopButton:hover {
+      background-color: #005fd1;
+    }
+
+    #stopButton {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="startButton" onclick="startFlashing()">Start</button>
+  <button id="stopButton" onclick="onStopClick()">Stop</button>
+
+  <div id="flashOverlay"></div>
+  <img id="flashImage" src="jumpscare.jpg" alt="Flash Image" />
+
+  <audio id="flashSound" src="flashbang.mp3" preload="auto"></audio>
+
+  <script>
+    let flashing = false;
+    let flashInterval;
+    const flashSound = document.getElementById('flashSound');
+    const flashOverlay = document.getElementById('flashOverlay');
+    const flashImage = document.getElementById('flashImage');
+    const startBtn = document.getElementById('startButton');
+    const stopBtn = document.getElementById('stopButton');
+
+    flashSound.volume = 0.5;
+
+    let dx = 4;
+    let dy = 4;
+    let bounceAnimation;
+
+    function triggerFlash() {
+      const isImageFlash = Math.random() < 0.01;
+
+      flashSound.currentTime = 0;
+      flashSound.play().catch(e => {
+        console.log('Flash sound play blocked:', e);
+      });
+
+      if (isImageFlash) {
+        flashImage.style.opacity = '1';
+        setTimeout(() => {
+          flashImage.style.opacity = '0';
+        }, 100);
+      } else {
+        flashOverlay.style.opacity = '1';
+        setTimeout(() => {
+          flashOverlay.style.opacity = '0';
+        }, 100);
+      }
+    }
+
+    function startFlashing() {
+      if (flashing) return;
+      flashing = true;
+      startBtn.style.display = 'none';
+      stopBtn.style.display = 'block';
+
+      stopBtn.style.left = (window.innerWidth / 2 - stopBtn.offsetWidth / 2) + 'px';
+      stopBtn.style.top = (window.innerHeight / 2 - stopBtn.offsetHeight / 2) + 'px';
+
+      flashInterval = setInterval(() => {
+        if (Math.random() < 0.7) {
+          triggerFlash();
+        }
+      }, 250);
+
+      startBouncing();
+    }
+
+    function onStopClick() {
+      clearInterval(flashInterval);
+      flashing = false;
+
+      cancelAnimationFrame(bounceAnimation);
+
+      flashOverlay.style.opacity = '0';
+      flashImage.style.opacity = '0';
+
+      stopBtn.style.display = 'none';
+      startBtn.style.display = 'block';
+    }
+
+    function startBouncing() {
+      function bounce() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+
+        const btnWidth = stopBtn.offsetWidth;
+        const btnHeight = stopBtn.offsetHeight;
+
+        let x = parseFloat(stopBtn.style.left) || 0;
+        let y = parseFloat(stopBtn.style.top) || 0;
+
+        x += dx;
+        y += dy;
+
+        if (x + btnWidth >= w || x <= 0) dx *= -1;
+        if (y + btnHeight >= h || y <= 0) dy *= -1;
+
+        stopBtn.style.left = x + 'px';
+        stopBtn.style.top = y + 'px';
+
+        bounceAnimation = requestAnimationFrame(bounce);
+      }
+
+      cancelAnimationFrame(bounceAnimation);
+      bounce();
+    }
+  </script>
+</body>
+</html>
